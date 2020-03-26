@@ -1,26 +1,41 @@
 import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import { useQuery } from 'react-query';
+import { ReactQueryDevtools } from 'react-query-devtools';
+import { request } from 'graphql-request';
+
 
 function App() {
+  const GET_CHARACTERS = `
+    {
+      characters {
+        results {
+          name
+          id
+          image
+        }
+      }
+    }
+  `;
+
+  const { data, status, error } = useQuery('characters', async () => {
+    const characters = await request('https://rickandmortyapi.com/graphql/', GET_CHARACTERS);
+    return characters;
+  })
+
+  if (status === "loading") return <p>Loading...</p>;
+  if (status === "error") return <p><strong>{error.message}</strong></p>;
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div>
+      <ReactQueryDevtools />
+      {data.characters.results.map(character => (
+        <React.Fragment key={character.id}>
+          <p>{character.name}</p>
+          <img src={character.image} alt="Rick and Morty Character" />
+        </React.Fragment>
+      ))}
     </div>
-  );
+  )
 }
 
 export default App;
